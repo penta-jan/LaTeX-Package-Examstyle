@@ -1,0 +1,344 @@
+\NeedsTeXFormat{LaTeX2e}[1994/06/01]
+\ProvidesPackage{examstyle}[2018/10/05 Custom Package]
+%%%% AUTHOR: Jan Suchanek. 
+\RequirePackage{pgf,tikz}
+\usetikzlibrary{calc}
+
+\RequirePackage{framed}
+
+\RequirePackage{soul}
+ % for crossed-out text
+\RequirePackage{color}
+\RequirePackage{float} 
+\RequirePackage{flowfram} % for the answer box 
+
+\RequirePackage{environ}  % for switching on and off answers
+\RequirePackage{gensymb} % for degree sign
+\RequirePackage{amssymb} % for tickbox
+\RequirePackage{titletoc} % to display points in toc
+
+\RequirePackage{tocloft}  % for toc nicety
+\renewcommand{\cftsecleader}{}   % to make points flushright in toc
+\renewcommand{\cftsubsecleader}{}   % to make points flushright in toc
+\renewcommand{\cftsubsubsecleader}{}   % to make points flushright in toc
+
+\RequirePackage{appendix} % for the subtotal environment
+\RequirePackage{chngcntr} % for the subtotal environment
+\RequirePackage{etoolbox} % for the subtotal environment
+
+\RequirePackage{amsfonts} % for mathematics formula
+\RequirePackage{amstext} % for mathematics formula
+\RequirePackage{amsmath} % for mathematics formula
+
+\RequirePackage{graphicx} % for inserting graphics
+
+\RequirePackage{verbatim} % for adding multi-line comments
+
+\RequirePackage{iflang}  % to allow for German Lösung
+
+
+
+%% CONDITIONALS
+
+\newif\ifshowanswers
+
+%% OPTIONS are 'mm', cm', 'in' or 'newpage' for white space per point:
+
+\newcommand{\unit}{cm}%
+\newcommand*{\pointspace}{}%
+\newcommand{\writespace}{}%
+
+\def\DisplayMarked{}% Comment this to remove "...marked text..."
+
+%% 'whitespace' option mm
+\DeclareOption{mm}{%
+	\renewcommand{\unit}{mm}%
+	\renewcommand*{\pointspace}{}%
+	\renewcommand{\writespace}{\vspace*{\dimexpr\pointspace \unit}}%
+}
+
+%% 'whitespace' option cm
+\DeclareOption{cm}{%
+	\renewcommand{\unit}{cm}%
+	\renewcommand*{\pointspace}{}%
+	\renewcommand{\writespace}{\vspace*{\dimexpr\pointspace \unit}}%
+}
+
+%% 'whitespace' option in
+
+\DeclareOption{in}{%
+	\renewcommand{\unit}{in}%
+	\renewcommand*{\pointspace}{}%
+	\renewcommand{\writespace}{\vspace*{\dimexpr\pointspace \unit}}%
+}
+
+%% 'whitespace' option newpage: force cm space then break page
+
+\DeclareOption{newpage}{%
+	\renewcommand{\unit}{cm}%
+	\renewcommand*{\pointspace}{}%
+	\renewcommand{\writespace}{\vspace*{\dimexpr\pointspace \unit}\newpage}%
+}
+
+%% OPTION 'showanswers' for un-commenting.
+
+\DeclareOption{showanswers}{%
+	\showanswerstrue
+	\renewcommand{\writespace}{}%
+}
+
+ 
+
+% Default is cm
+
+\ExecuteOptions{cm}
+
+\ProcessOptions\relax
+
+% if you need more space, create it in the question environment itself using \vspace.
+
+
+%% COUNTERS
+
+% defines the counters
+
+\newcounter{totalpoints}
+\newcounter{subtotalpoints}[totalpoints]
+\newcounter{points}[subtotalpoints]
+\newcounter{subpoints}[points]
+
+%% COMMANDS
+
+
+
+
+% defines the command pagealert which creates a dashed frame around a page; 
+
+    \newcommand{\pagealert}{
+    \ifshowanswers
+    \begin{tikzpicture}[remember picture, overlay]
+      \draw[loosely dashed,line width = 25pt] ($(current page.north west) + (0.1in,-0.1in)$) rectangle ($(current page.south east) + (-0.1in,0.1in)$);
+    \end{tikzpicture}
+    \else\fi    
+    }
+    
+% defines the command quickanswer which is a command;
+
+    \newcommand{\quickanswer}[1]{\ifshowanswers#1\else\fi}    
+
+%% Gives out check box; ticktrue is given out ticked in the showanswers mode
+
+\newcommand{\ticktrue}{
+    \ifshowanswers
+      \hspace{2ex}$\boxtimes$\hspace{1ex}  
+	\else
+	  \hspace{2ex}$\square$\hspace{1ex} 
+	\fi%
+}
+
+\newcommand{\tickfalse}{
+    \hspace{2ex}$\square$\hspace{1ex} 
+}
+
+
+
+%%% The same within a list environment.
+
+\newcommand{\itemtrue}{
+    \ifshowanswers
+      \renewcommand\labelitemi{$\boxtimes$}\item
+	\else
+	  \renewcommand\labelitemi{$\square$}\item
+	\fi%
+}
+
+\newcommand{\itemfalse}{
+    \renewcommand\labelitemi{$\square$}\item
+}
+
+ 
+
+ 
+
+% defines the command resetsubtotal to be used at the end of each part. It resets the counter for subtotal
+
+\newcommand{\resetsubtotal}{%
+	\setcounter{subtotalpoints}{0}%
+}
+
+% defines the command givetotalpoints for the sum to be used at the end of the exam. It prints the total points at the end
+
+\newcommand{\givetotalpoints}%
+{%
+	\newpage\parbox{\textwidth}{%
+		\noindent%
+		\hrulefill%
+		\section*{\IfLanguageName{ngerman}{Punkte insgesamt: }{Total Points: } \hfill \arabic{totalpoints} points}
+%		\section*{Total Points Scored: }
+		\hrulefill%
+	}
+	\titlecontents{section}[2em]%
+	{\addvspace{1.0em plus 1pt}\bfseries}%   
+	{\contentslabel{2em}}%
+	{\hspace*{-2em}}%
+	{}%
+	\addcontentsline{toc}{section}{\hfill (\IfLanguageName{ngerman}{Summe: }{Total: } \arabic{totalpoints} pt)}
+}
+
+% defines the command subtotal of a part; resets the subtotal when called
+
+
+
+\newcommand{\subtotal}{%
+	\section*{Subtotal: \arabic{subtotalpoints} points}
+	\addcontentsline{toc}{section}{\hfill (\IfLanguageName{ngerman}{Zwischensumme: }{Subtotal: } \arabic{subtotalpoints} pt)}
+	\setcounter{subtotalpoints}{0}  %% RESETS
+} 
+
+
+
+%% ENVIRONMENTS
+
+% defines the environment question using the command \writespace 
+
+\NewEnviron{question}[2]{%
+	\setcounter{subpoints}{#2}
+	\renewcommand*{\pointspace}{#2}%
+	\section{#1 \hfill (#2 pt)}%
+	\addtocounter{subtotalpoints}{#2}%
+	\addtocounter{totalpoints}{#2}%
+	\parbox{\textwidth}{\BODY\writespace}%
+	\ifnum\value{subpoints}=\pointspace
+	\else
+	\par\noindent\colorbox{red}{\parbox{\textwidth}{MISMATCH! You should not use the environment question for questions with subquestions; use question* instead! }}
+	\fi
+}
+
+
+
+% defines the environment question* without \writespace; use this when you include subquestions in your question environment, because these carry their own whitespace.
+
+\newenvironment{question*}[2]{%
+	\setcounter{subpoints}{0}
+	\renewcommand*{\pointspace}{#2}%
+	\section{#1 \hfill (#2 pt)}%
+	\addtocounter{subtotalpoints}{#2}%
+	\addtocounter{totalpoints}{#2}%
+}%
+{%
+	\ifnum\value{subpoints}=\pointspace
+	\else
+	\par\noindent\colorbox{red}{\parbox{\textwidth}{MISMATCH! Subquestions have together \arabic{subpoints} points, but the overall question bears \pointspace\quad  points!}}
+	\fi
+}
+
+%%% Exactly the same as question* so that question* becomes deprecaded.
+
+\newenvironment{metaquestion}[2]{%
+	\setcounter{subpoints}{0}
+	\renewcommand*{\pointspace}{#2}%
+	\section{#1 \hfill (#2 pt)}%
+	\addtocounter{subtotalpoints}{#2}%
+	\addtocounter{totalpoints}{#2}%
+}%
+{%
+	\ifnum\value{subpoints}=\pointspace
+	\else
+	\par\noindent\colorbox{red}{\parbox{\textwidth}{MISMATCH! Subquestions have together \arabic{subpoints} points, but the overall question bears \pointspace\quad  points!}}
+	\fi
+}
+
+% defines the environment question- without \writespace for stand alone questions such as those that require the student to fill in something in a table.  
+
+\newenvironment{question-}[2]{%
+	\setcounter{subpoints}{0}
+	\renewcommand*{\pointspace}{#2}%
+	\section{#1 \hfill (#2 pt)}%
+	\addtocounter{subtotalpoints}{#2}%
+	\addtocounter{totalpoints}{#2}%
+}%
+ 
+
+% defines the environment subquestion etc. using the command \writespace ; same as above, only subsection is used, and both subtotalpoints and totalpoints are not (!) increased. The starred versions again don't produce white space.
+
+\NewEnviron{subquestion}[2]{%
+	\renewcommand*{\pointspace}{#2}%
+	\subsection{#1 \hfill (#2 pt)}%
+	\addtocounter{subpoints}{#2}%
+	\parbox{\textwidth}{\BODY\writespace}%
+}
+
+\newenvironment{subquestion*}[2]{%
+	\renewcommand*{\pointspace}{#2}%
+	\subsection{#1 \hfill (#2 pt)}%
+	\addtocounter{subpoints}{#2}%
+}%
+
+\newenvironment{subquestion-}[2]{%
+	\renewcommand*{\pointspace}{#2}%
+	\subsection{#1 \hfill (#2 pt)}%
+	\addtocounter{subpoints}{#2}%
+}%
+{%
+}
+
+
+
+
+% defines the environment hint which is simply boxed
+
+\NewEnviron{hint}{%
+	\par\vspace{3ex}\noindent\fbox{\parbox{\textwidth}{\begin{center}\BODY\end{center}}}\vspace{3ex}%  
+}
+
+
+
+
+% defines the environment answer 
+\NewEnviron{answer}{%
+	\ifshowanswers
+    \vspace{2\parsep}
+	\noindent \textrm{\textsc{\IfLanguageName{ngerman}{Lösung: }{Solution: }}} \noindent\textrm\BODY
+	\vspace{5ex}
+	\else\fi%
+}
+
+% defines the environment answer- for answers without any ado, for example if the answer is just a part of something 
+
+\NewEnviron{answer-}{%
+	\ifshowanswers
+	{\textrm\BODY}
+	\else\fi%
+}
+
+
+
+% defines the environment hide 
+\NewEnviron{hide}{%
+	\ifshowanswers
+	\else
+	\BODY
+	\fi%
+}
+
+
+%%% Environment Swapimage
+
+\NewEnviron{swapimage}[3]{
+	\begin{figure}[H]
+		\begin{center}
+		\ifshowanswers
+		\textrm{\textsc{\IfLanguageName{ngerman}{Lösung: }{Solution: }}}\par
+		\includegraphics{#3}
+		\else
+		\includegraphics{#2}
+		\fi
+		\caption{\label{#1}\BODY}
+
+		\end{center}
+	\end{figure}
+}
+
+
+
+\endinput

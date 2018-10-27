@@ -1,0 +1,245 @@
+\documentclass[a4paper]{scrartcl}
+
+\usepackage{lmodern}
+\usepackage{helvet}
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{paralist}
+\newcommand{\noun}[1]{\textsc{#1}}
+
+\usepackage[showanswers]{examstyle}  %% TRY showanswers 
+
+\title{The Package Examstyle}
+\subtitle{\begin{answer-}...in answer mode\end{answer-}}
+\author{Jan Suchanek}
+
+
+\begin{document}
+
+\maketitle
+
+%\loesung
+
+\pagealert
+
+\begin{abstract}
+This package defines \LaTeX\ environments for exam questions and their answers, which facilitates the composition and layout of exams and their model solutions. Points for each question are neatly displayed and summed up, and a white space for students is automatically created in relation to the amount of points achievable, and you can automatically display the total amount of points at the end of the exam. You can toggle between the view for the candidates  (with white space) and a view for examiners (with model solutions). 
+\end{abstract}
+
+
+
+Composing exams can be an arduous task. You must select questions, format them so there is space to solve them, make sure the total of points achievable equals some target, and provide model  exams with the solutions. This lean package is designed to facilitate all this, so that you can concentrate on the quality of your questions and build up a question bank of sub-files.
+
+\noindent
+\section*{Calling the package and Options}
+Call the package (attention: it is not on CTAN, so you must copy it into your project!) in your document preamble with
+\begin{verbatim}
+\usepackage{examstyle}
+\end{verbatim}
+ If you call the package just like that, answers are entirely suppressed, and white space is generated. But if you call it in the form
+\begin{verbatim}
+\usepackage[showanswers]{examstlye}
+\end{verbatim}
+the whitespace disappears and the answers are printed.  You may want to try it with this file. 
+
+
+\begin{answer}
+You've done it! This is an `answer' text.
+\end{answer}
+
+\noindent
+\section*{Environments}
+
+\paragraph{question}
+At the core of this package lies the new environment \verb|question| wich comes with two parameters: \verb+\question{title}{points}+ Such questions can easily be stored in separate files and then be inserted in your exam document using the \verb|\input| command. Have a look at \verb|twelvesons.tex| for an example.
+
+The fundamental syntax of the \verb|question| environment is straightforward:
+
+\begin{verbatim}
+
+\begin{question}{'headline'}{points}
+	The actual question
+\end{question}
+
+\end{verbatim}
+
+\noindent
+The first example used below has the following syntax:
+
+\begin{verbatim}
+
+\begin{question}{Calculus}{2}
+	$1+1=$
+\end{question}
+
+\end{verbatim}
+
+\noindent
+After displaying question title and points in form of \verb|\section|, the environment forces a vertical space for the student's answer. The size of this space depends on the amount of points in the question; default is set to 1 cm per point, but you can evoke \verb|examstyle| with the option \verb|[mm]| or \verb|[in]| to have a millimeter or an inch per point instead. Since we're trying to keep both the white space and the question on one page, you will then often end up have just one question per page (which is fine). You can also forge a page break with the option \verb|[newpage]|.\footnote{If you need more or specific space, you can of course force it within the environment.} 
+
+Note that \verb|question| re-defines \verb|section|. Thus, you should not use  \verb|section| in your exam. You can however use higher level commands such as \verb|chapter| or \verb|part|, depending on your document class.
+
+\paragraph{question-}
+
+Sometimes you will not need white space, for example when students have to complete a picture or tick boxes. In this case, you should use \verb|\begin{question-}{}{}|. It behaves just like the \verb+\question+ environment, but without white space. So here you would normally have some sort of image or maybe multiple choice tick boxes in your body. There is an easy way to toggle between the image to be filled out and the filled out image: put the part to be filled out in the environment \verb|hide| and the filled in version in \verb|answer| or \verb|answer-| (see below).
+
+
+\paragraph{answer}
+
+is only displayed when the package is called with the option \verb+[showanswers]+. 
+
+Answers are always printed in serif font, which of course is only visible when the rest of your exam is not. 
+
+The environment also prints \textsc{Solution:} (without paragraph) before the solution, which is why you should only use it if your answer really is an independent block (of text). The  environment also creates some space above and below.
+
+You should avoid to nest the answer environment within the question environment, since then \LaTeX will try to print it all on one page, and that may result in overflows. The reason is that questions are within a parbox. Thus what you should do is
+
+\begin{verbatim}
+\begin{question}{Calculus}{2}
+    $1+1=$
+\end{question}    
+\begin{answer}
+    $1+1=2$
+\end{answer}
+\end{verbatim}
+
+
+
+\paragraph{answer-}
+
+is the same as \verb|answer| but simpler and without adding `Solution'. This is what you can use to nest e.g.\ within a table where students just have to tick a box. You can even use this within a \verb|TikZ|-Picture to make solutions become visible where images have to be completed. Be aware that \verb|answer-| does not insert neither line feeds nor space nor nothing. It does toggle the font to serifs though.  You can also use \verb|\ifshowanswers foo \else\fi| if you find that shorter, or our new command \verb|\quickanswer{foo}| which is even shorter (see below).
+
+
+
+\paragraph{hide}
+
+is a useful command if you want to \emph{not} display some part of the original exam in the model solution version; it is thus the `opposite' of  \verb|answer-|.  You can combine the two to toggle between one version of something and another, for example an image and the filled in image; this can be done within floats or wherever you find it suitable. You can also use this to switch off any parts of your real exam that is not needed in the model solution version, such as additional form sheets etc. 
+
+Because fill-in picture questions are popular---for example where students have to complete a graph they were presented in class---we have created a short cut environment: \verb|swappicture|.
+
+\paragraph{swapimage}
+
+Often, students have to complete a picture or draw in graph in a coordinate system etc.; this can be done using the environments above; however, we have created this environment to make things a bit easier. The syntax is
+
+\begin{verbatim}
+    \begin{swapimage}{fooref}{examvpicture.png}{solutionpicture.png}
+        The caption of the float / figure / picture;
+        which can only be a one-liner (lists etc. won't work here).
+    \end{swapimage}
+\end{verbatim}
+
+This produces a float with the images centered (png or jpg or whatever your document accepts) swapped between the two versions; the body of this environment is the caption the float; and the first argument is the label, to which you should refer in your question with \verb|\ref{fooreference}|. Attention: images need of course to be saved in your working directory, and have the right print size. The internal command is \verb|\includegraphics{#foo}| The above typically works well with a question of this type:
+
+\begin{verbatim}
+    \begin{question-}{Picture Completion}{1}
+        Please complete the image in Figure \ref{fooreference}.
+    \end{question-}
+\end{verbatim}
+
+
+\paragraph{metaquestion, question*}
+
+The environments \verb|metaquestion| and \verb|question*| are identical. Both of them require you to nest some subquestions using the \verb|subquestion| environement. Just as \verb|question| redefines \verb|section| so \verb|subquestion| redefines \verb|subsection|. It is important that the number of points indicated in  \verb|metaquestion| equals the sum of the subquestion points. The package does not sum these points up for you (that would require writing the sum to an .aux file and recompile), but it will display a red boxed error message if the sums are not correct.
+
+\paragraph{subquestion} is thus what you should use for parts of a question. Just like within \verb|question| you have the variant \verb|subquestion-| which does not produce white space. Nest your subquestiosn within the environment \verb|metaquestion|  to make sure you get your sums right.
+
+\paragraph{Floats} should not be placed within a question environment that bears white space since these environments produce a \verb|parbox| to have both question and white space etc.\ on one page. Place floats either inside \verb|question-| or outside these environments. 
+
+\paragraph{hint}
+
+The environment \verb|hint| produces a boxed hint. You may evoke \verb|hint| within or after the \verb|question| environment. That may create some extra space since hints like to sit on the bottom of a page rather than exactly after the forced blank space. If the question bears many points, put it within the \verb|question| environment, because otherwise it may jump on another page. Thus this may require a bit of fiddling. Hints are always displayed.
+
+\section*{Commands}
+
+An easy way to execute commands depending on the answer or not answer mode is \verb|\ifshowanswers\foocommand\else\fi|. This works just like putting your command (or whatever else) ino the environment \verb|answer-|.
+
+\paragraph{ticktrue, tickfalse; itemtrue, itemfalse}
+
+These  commands create check boxes which are checked if true and \verb|showanswers|, otherwise unchecked. The \verb|tick-| version  simpler and can be used anywhere. The \verb|\item-| version works within the environment \verb|itemize| and looks better.  
+
+Multiple choice questions should appear within a normal \verb|question-| or \verb|subquestion-| environment. Make sure that the amount of points specified somehow relates to the number of points achievable. Whether you want to grant one point per right question, or half a point, and so on, is something you should explain in the question text. 
+
+\paragraph{subtotal}
+
+This displays a subtotal, for example for a particular part of the exam. The counter \verb|subtotalpoints| is then set to zero again, and a new sub-sum is started.  This is handy when you want to compose an exam that has a number of parts, each of which is to have a certain number of points. You can of course nest this with the \verb|answer-| environment to only have it displayed in the model solution part. 
+
+
+ 
+
+\paragraph{givetotalpoints}
+
+Use the command \verb|\givetotalpoints| at the end of your exam to sum up points on a separate page at the end of exam and in the table of contents. More precisely, the command displays the counter \verb|totalpoints| so you can also evoke it in the middle of your exam; it will then display the amount of points achievable until that point.
+
+\paragraph{quickanswer}
+
+Use the command \verb|\quickanswer{foo}| if you only want to add a \quickanswer{tiny} single bit of information as an answer; this is particularly useful if the answer is a simple tick in a box, a line in an image, a number or word in a table or anything else which is small that does not require the environements \verb|answer|. 
+
+%\paragraph{subtotal}
+
+%Parallel to the counter \verb|totalpoints| runs the counter \verb|subtotalpoints|. You can use this to display the amount of points for a specific part only; use \verb|\subtotal|. If you only want this to appear within the model solution, use \verb|\ifshowanswers\subtotal\else\fi| or simply put it into the \verb|answer-| environment, which basically does the same as the short command above.
+
+\paragraph{pagealert}
+The command \verb|pagealert| creates a dashed line around a page in answer mode and does nothing otherwise. It is useful if you want to see from a distance that some copy is special; typically the model solution which students are supposed not to receive.  
+
+\begin{verbatim}
+    \pagealert
+\end{verbatim}
+
+
+\section*{Miscellaneous}
+
+The package sports English and German; if you load \verb|\usepackage[ngerman]{babel}|, you will get `Lösung' instead of `Solution' etc. English is default, so in any other case these words will still be English. 
+
+The remainder of this document is an example of use.
+
+
+\newpage
+\sffamily
+
+\begin{center}
+{\LARGE AN EXAMPLE EXAM}
+\pagealert
+\vspace{3ex}
+
+\begin{hide}
+    Version for candidates
+\end{hide}
+
+\begin{answer-}
+    Version with model solutions
+\end{answer-}
+
+ 
+\end{center}
+
+\newpage
+\tableofcontents
+
+\newpage
+
+\part{All Your Knowledge}
+
+
+
+\input{calculus.tex}
+\input{multichoice_simple.tex}
+\input{multichoice_list.tex}
+\input{rootsofevil.tex}
+
+%\givesubtotalpoints
+
+\input{question_with_subquestions.tex}
+\input{twelvesons.tex}
+\input{completethepicture.tex}
+\input{time.tex}
+
+%\givesubtotalpoints
+\givetotalpoints
+
+
+
+\end{document}
+
